@@ -1,0 +1,28 @@
+{
+	"screen":	0,
+	"duration":	2,
+	"widgets": [
+		{
+			"x":			"( 100 - 15 )",
+			"y":			"( ( 100 - 50 ) / 2 )",
+			"width":		12,
+			"height":		50,
+			"name":			"Streamloots",
+			"url":			"https://widgets.streamloots.com/alerts/[STREAMLOOTS_ID]"
+		},
+		{
+			"x":			"( ( 100 - 660px ) ) / 2",
+			"y":			"( 100 - 39px )",
+			"width":		"660px",
+			"height":		"42px",
+			"name":			"RocketStats",
+			"url":			"file:///C:/Users/[USERNAME]/AppData/Roaming/bakkesmod/bakkesmod/RocketStats/RocketStats_overlay/overlay.html"
+		},
+		{
+			"y":			"15px",
+			"height":		"50px",
+			"name":			"Text",
+			"code":			"<html><body><h1 style=\"font-family: sans-serif; color: #eee; text-align: center;\">StreamWidgets</h1></body></html>"
+		}
+	]
+}
