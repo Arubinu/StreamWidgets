@@ -1,7 +1,7 @@
 {
 	"screen":	0,
 	"duration":	2,
-	"widgets": [
+	"default": [
 		{
 			"x":			"( 100 - 15 )",
 			"y":			"( ( 100 - 50 ) / 2 )",
@@ -11,18 +11,44 @@
 			"url":			"https://widgets.streamloots.com/alerts/[STREAMLOOTS_ID]"
 		},
 		{
-			"x":			"( ( 100 - 660px ) ) / 2",
+			"x":			"( ( 100 - 613px ) ) / 2",
 			"y":			"( 100 - 39px )",
-			"width":		"660px",
+			"width":		"613px",
 			"height":		"42px",
 			"name":			"RocketStats",
 			"url":			"file:///C:/Users/[USERNAME]/AppData/Roaming/bakkesmod/bakkesmod/RocketStats/RocketStats_overlay/overlay.html"
-		},
-		{
-			"y":			"15px",
-			"height":		"50px",
-			"name":			"Text",
-			"code":			"<html><body><h1 style=\"font-family: sans-serif; color: #eee; text-align: center;\">StreamWidgets</h1></body></html>"
 		}
-	]
+	],
+	"configs": {
+		"Test Config 1": [
+			{
+				"x":			"( ( 100 - 500px ) ) / 2",
+				"y":			"15px",
+				"width":		"500px",
+				"height":		"50px",
+				"name":			"Title",
+				"code":			"<html><body><h1 style=\"font-family: sans-serif; color: #eee; text-align: center;\">StreamWidgets 1</h1></body></html>"
+			},
+			{
+				"x":			"( ( 100 - 500px ) ) / 2",
+				"y":			"( 15px + 50px )",
+				"width":		"500px",
+				"height":		"50px",
+				"name":			"Rectangle",
+				"background":	"rgba( 200, 100, 100, .5 )",
+				"code":			"<html><body></body></html>"
+			}
+		],
+		"Test Config 2": [
+			{
+				"x":			"( ( 100 - 500px ) ) / 2",
+				"y":			"15px",
+				"width":		"500px",
+				"height":		"50px",
+				"name":			"Title + Rectangle",
+				"background":	"rgba( 100, 100, 200, .5 )",
+				"code":			"<html><body><h1 style=\"font-family: sans-serif; color: #eee; text-align: center;\">StreamWidgets 2</h1></body></html>"
+			}
+		]
+	}
 }

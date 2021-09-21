@@ -11,13 +11,14 @@ Then you will have to install PyQt5 via the command prompt:
  - Download and unzip this project,
  - Use the keyboard shortcut WIN + R,
  - Write `cmd` then validate,
- - Write `cd` followed by a space, then drag the `StreamFlash` folder into the command prompt and validate,
+ - Write `cd` followed by a space, then drag the `StreamWidgets` folder into the command prompt and validate,
  - Finally copy the following command (right click on Windows to paste) and validate: `python -m pip install -r requirements.txt` (if that doesn't work, add `--user` to the command).
 
 Now enter your personal information in the `config.json` file (for more details on the syntax, inquire about the JSON format):
  - screen: Default screen number to operate on,
  - duration: Time during which the yellow border remains displayed (sec),
- - widgets: List of widgets to display (numbers are percentages unless `px` is specified).
+ - default: List of widgets to display (numbers are percentages unless `px` is specified).
+ - configs: Allows you to add overlay packs (these will be interchangeable).
 
 Now that everything is installed, you can double-click on the `main.pyw` file, which will launch the application in your system tray.
 

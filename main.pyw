@@ -7,21 +7,21 @@ import sys
 import time
 
 # since PIP
-import pyautogui
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMenu, QLabel, QAction, QWidgetAction, QSystemTrayIcon
 
 from library import window
 
 # defines
 APP_ICON = os.path.dirname( __file__ ) + '/resources/logo.png'
 APP_TITLE = 'StreamWidgets'
-APP_VERSION = '1.0'
+APP_VERSION = '2.0'
 
 # globals
 app = None
-tcs = None
 win = None
-last = 0
+last = None
 menu = None
 screen = 0
 options = {}
@@ -29,14 +29,11 @@ options = {}
 def systray( app ):
 	global APP_ICON, APP_TITLE, APP_VERSION, options
 
-	from PyQt5.QtGui import QIcon
-	from PyQt5.QtWidgets import QMenu, QAction, QSystemTrayIcon
-
 	tray = QSystemTrayIcon( app )
 	tray.setIcon( QIcon( APP_ICON ) )
 
 	menu = QMenu()
-	menu.setStyleSheet( 'QMenu::item, QLabel { padding: 3px 6px 3px 6px; } QMenu::item:selected { background-color: rgba( 0, 0, 0, .1 ); }' )
+	menu.setStyleSheet( 'QMenu::item, QLabel { padding: 3px 6px 3px 6px; } QMenu::item:selected, QLabel:hover { background-color: rgba( 0, 0, 0, .1 ); }' )
 
 	action = menu.addAction( '%s v%s' % ( APP_TITLE, APP_VERSION ) )
 	action.setEnabled( False )
@@ -48,19 +45,13 @@ def systray( app ):
 
 	menu.addSeparator()
 
-	# Refresh
-	submenu = menu.addMenu( 'Refresh' )
+	# Configuration
+	submenu = menu.addMenu( 'Configurations' )
+	#! Configuration
 
-	action = submenu.addAction( 'Widgets' )
-	action.triggered.connect( lambda: refresh() )
-
-	action = submenu.addAction( 'Configurations' )
-	action.triggered.connect( lambda: refresh( True ) )
-	#! Refresh
-
-	# Toggle
-	submenu = menu.addMenu( 'Toggle' )
-	#! Toggle
+	# Widgets
+	submenu = menu.addMenu( 'Widgets' )
+	#! Widgets
 
 	menu.addSeparator()
 
@@ -72,17 +63,12 @@ def systray( app ):
 
 	return ( [ tray, menu ] )
 
-def refresh( config = False, without_set = False ):
-	global win, options
-
-	if not config:
-		win.sigrefresh.emit( -1 )
-		pyautogui.hotkey( 'alt', 'tab' ) # fix blackscreen
-		return
+def refresh():
+	global win, last, options
 
 	try:
 		import json
-		options = { 'duration': 2, 'screen': 0, 'widgets': [] }
+		options = { 'duration': 2, 'screen': 0, 'default': [], 'configs': {} }
 		config = os.path.join( os.path.dirname( __file__ ), 'config.json' )
 		with open( config, 'rb' ) as f:
 			data = json.loads( f.read() )
@@ -91,38 +77,98 @@ def refresh( config = False, without_set = False ):
 	except:
 		pass
 
-	if 'widgets' not in options or type( options[ 'widgets' ] ) is not list or not options[ 'widgets' ]:
-		print( 'No widgets.' )
-		return
+	if 'default' not in options or type( options[ 'default' ] ) is not list or not options[ 'default' ]:
+		options[ 'default' ] = []
 
-	if not without_set:
-		toggle = [ action for action in menu.actions() if action.text() == 'Toggle' ][ 0 ].menu()
-		toggle.clear()
-		try:
-			if options[ 'widgets' ]:
-				for num, widget in enumerate( options[ 'widgets' ] ):
-					action = toggle.addAction( widget[ 'name' ] )
-					action.setCheckable( True )
-					action.setChecked( True )
-					( lambda num, action: action.triggered.connect( lambda: toggle_widget( num ) ) )( num, action )
-			else:
-				action = toggle.addAction( 'No widget' )
-				action.setEnabled( False )
-		except:
-			toggle.clear()
-			action = toggle.addAction( 'No widget' )
+	if 'configs' not in options or type( options[ 'configs' ] ) is not dict or not options[ 'configs' ]:
+		last = None
+		options[ 'configs' ] = {}
+
+	submenu = [ action for action in menu.actions() if action.text() == 'Configurations' ][ 0 ].menu()
+	submenu.clear()
+	try:
+		default_action = submenu.addAction( 'Default' )
+		default_action.setCheckable( True )
+		default_action.triggered.connect( lambda: toggle_config( 'Default' ) )
+
+		checked = False
+		if options[ 'configs' ]:
+			submenu.addSeparator()
+			for name, config in options[ 'configs' ].items():
+				if name == last:
+					checked = name
+
+				action = submenu.addAction( name )
+				action.setCheckable( True )
+				action.setChecked( checked and checked == name )
+				( lambda name, action: action.triggered.connect( lambda: toggle_config( name ) ) )( name, action )
+	except:
+		pass
+	finally:
+		submenu.addSeparator()
+		action = QWidgetAction( submenu )
+		button = QLabel()
+		button.setAlignment( Qt.AlignCenter )
+		button.setText( 'Reload' )
+		action.setDefaultWidget( button )
+		action.triggered.connect( lambda: refresh() )
+		submenu.addAction( action )
+
+		default_action.setChecked( not checked )
+		toggle_config( checked )
+
+	if options[ 'screen' ] >= 0:
+		next_screen( force = options[ 'screen' ] )
+
+def toggle_config( name = None ):
+	global win, last, menu, options
+
+	last = ( name if name and ( name == 'Default' or name in options[ 'configs' ] ) else last )
+	config = [ action for action in menu.actions() if action.text() == 'Configurations' ][ 0 ].menu()
+	for action in config.actions():
+		checked = ( not last and action.text() == 'Default' )
+		checked = ( checked or action.text() == last )
+		action.setChecked( checked )
+
+	widgets = options[ 'default' ]
+	if last in options[ 'configs' ]:
+		widgets = options[ 'configs' ][ last ]
+
+	submenu = [ action for action in menu.actions() if action.text() == 'Widgets' ][ 0 ].menu()
+	submenu.clear()
+	try:
+		if widgets:
+			for num, widget in enumerate( widgets ):
+				action = submenu.addAction( widget[ 'name' ] )
+				action.setCheckable( True )
+				action.setChecked( True )
+				( lambda num, action: action.triggered.connect( lambda: toggle_widget( num ) ) )( num, action )
+		else:
+			action = submenu.addAction( 'No widget' )
 			action.setEnabled( False )
+	except:
+		submenu.clear()
+		action = submenu.addAction( 'No widget' )
+		action.setEnabled( False )
+	finally:
+		submenu.addSeparator()
+		action = QWidgetAction( submenu )
+		button = QLabel()
+		button.setAlignment( Qt.AlignCenter )
+		button.setText( 'Reload' )
+		action.setDefaultWidget( button )
+		action.triggered.connect( lambda: toggle_config() )
+		submenu.addAction( action )
 
-		if options[ 'screen' ] >= 0:
-			next_screen( force = options[ 'screen' ] )
-
-		win.set_widget( options[ 'widgets' ] )
+	win.set_widget( [ widget.copy() for widget in widgets ] )
 
 def toggle_widget( num ):
+	global win, menu
+
 	win.sigtoggle.emit( num )
 
-	toggle = [ action for action in menu.actions() if action.text() == 'Toggle' ][ 0 ].menu()
-	action = toggle.actions()[ num ]
+	submenu = [ action for action in menu.actions() if action.text() == 'Widgets' ][ 0 ].menu()
+	action = submenu.actions()[ num ]
 	action.toggle()
 	action.toggle() # fix toggle
 
@@ -139,12 +185,9 @@ def next_screen( force = None ):
 
 	win.windowHandle().setScreen( screens[ screen ] )
 	win.setGeometry( geometry )
-	win.showFullScreen()
-	pyautogui.hotkey( 'alt', 'tab' ) # fix blackscreen
 
 	win.sigpositions.emit()
 	win.sigborder.emit( options[ 'duration' ] )
-	win.signotice.emit()
 
 def set_option( name, value ):
 	global options
@@ -160,11 +203,9 @@ def main():
 		app = window.app
 		win = window.win
 
-		win.setWindowFlags( win.windowFlags() | Qt.Tool )
-
 		tray, menu = systray( app )
 
-		refresh( True )
+		refresh()
 
 		window.exec()
 	except KeyboardInterrupt:

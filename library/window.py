@@ -7,7 +7,7 @@ import time
 
 # since PIP
 from PyQt5.QtGui import QIcon, QPixmap, QMouseEvent
-from PyQt5.QtCore import Qt, QUrl, QEvent, QPoint, QTimer, pyqtSignal
+from PyQt5.QtCore import Qt, QUrl, QEvent, QPoint, pyqtSignal
 from PyQt5.QtWidgets import QApplication, QGridLayout, QMainWindow, QWidget, QLabel
 from PyQt5.QtWebEngineWidgets import *
 
@@ -32,7 +32,6 @@ class Window( QMainWindow ):
 	_timers = []
 
 	sigborder = pyqtSignal( int )
-	signotice = pyqtSignal()
 	sigtoggle = pyqtSignal( int )
 	sigrefresh = pyqtSignal( int )
 	sigpositions = pyqtSignal()
@@ -46,9 +45,9 @@ class Window( QMainWindow ):
 
 	def setup( self ):
 		self.setWindowTitle( self._title )
-		self.setWindowFlags( Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput )
+		self.setWindowFlags( Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowTransparentForInput | Qt.WindowDoesNotAcceptFocus | Qt.Tool )
 		self.setAttribute( Qt.WA_TranslucentBackground, True )
-		#self.setAttribute( Qt.WA_ShowWithoutActivating, True )
+		self.setAutoFillBackground( False )
 
 		if self._icon:
 			icon = QIcon()
@@ -59,21 +58,11 @@ class Window( QMainWindow ):
 		layout.setContentsMargins( 0, 0, 0, 0 )
 
 		self.centralWidget = QWidget( self )
-		self.centralWidget.setAutoFillBackground( True )
+		self.centralWidget.setAutoFillBackground( False )
 		self.centralWidget.setLayout( layout )
 		self.setCentralWidget( self.centralWidget )
 
-		self.notice = QLabel( 'In case of black screen, click or do an ALT + TAB !' )
-		self.notice.setAlignment( Qt.AlignHCenter | Qt.AlignVCenter )
-		self.notice.setStyleSheet( 'font-size: 42px; color: #eee;' )
-		layout.addWidget( self.notice, 0, 0 )
-
-		self.timer = QTimer()
-		self.timer.setSingleShot( True )
-		self.timer.timeout.connect( lambda: self.notice.hide() )
-
 		self.sigborder.connect( self.border )
-		self.signotice.connect( self.show_notice )
 		self.sigtoggle.connect( self.toggle_widget )
 		self.sigrefresh.connect( self.refresh )
 		self.sigpositions.connect( self.positions )
@@ -208,7 +197,7 @@ class Window( QMainWindow ):
 		if 'code' in widget and widget[ 'code' ]:
 			url = QUrl( 'http://localhost' )
 			browser.setHtml( widget[ 'code' ], url );
-		else:
+		elif 'url' in widget and widget[ 'url' ]:
 			url = QUrl( widget[ 'url' ] )
 			browser.setUrl( url )
 
@@ -217,10 +206,6 @@ class Window( QMainWindow ):
 		self.set_position( num )
 
 		browser.loadFinished.connect( lambda ok: self.loaded( num, ok ) )
-
-	def show_notice( self ):
-		self.notice.show()
-		self.timer.start( 3000 )
 
 	def toggle_widget( self, num ):
 		widget = self._widgets[ num ]
@@ -250,7 +235,6 @@ def main( wigets, icon = None, title = None ):
 	global win
 
 	init( wigets, icon, title )
-	#win.setWindowFlags( win.windowFlags() | Qt.WindowFullScreen )
 	win.sigborder.emit( 2 )
 	exec()
 
